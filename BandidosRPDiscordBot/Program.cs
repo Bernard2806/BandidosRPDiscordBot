@@ -22,9 +22,7 @@ namespace BandidosRPDiscordBot
         public async Task MainAsync()
         {
             // 🔐 Leer token y GuildId desde UserSecrets
-            _config = new ConfigurationBuilder()
-                .AddUserSecrets<Program>()
-                .Build();
+            _config = ConfigLoader.Load();
 
             string token = _config["DiscordToken"];
             if (string.IsNullOrEmpty(token))
