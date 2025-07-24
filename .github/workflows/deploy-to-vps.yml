@@ -1,0 +1,33 @@
+name: Deploy Bot Discord a VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publicar bot
+        run: dotnet publish -c Release -o publish
+
+      - name: Instalar sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Copiar archivos a la VPS
+        run: |
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r ./publish/* ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/${{ secrets.USERNAME }}/discord-bot/
+
+      - name: Reiniciar servicio del bot en la VPS
+        run: |
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} "sudo systemctl restart discordbot"
