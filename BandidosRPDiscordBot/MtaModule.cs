@@ -20,6 +20,7 @@ namespace BandidosRPDiscordBot
             Console.WriteLine("🔧 MtaModule constructor ejecutado");
         }
 
+        [DefaultMemberPermissions(GuildPermission.SendMessages | GuildPermission.ViewChannel)]
         [SlashCommand("usuarios", "Muestra la cantidad de jugadores conectados al servidor")]
         public async Task Usuarios()
         {
