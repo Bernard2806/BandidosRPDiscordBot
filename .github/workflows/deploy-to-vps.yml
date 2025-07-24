@@ -2,39 +2,40 @@ name: Deploy Bot to VPS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Checkout repo
-      uses: actions/checkout@v3
+      - name: 📥 Checkout repo
+        uses: actions/checkout@v3
 
-    - name: 🔧 Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: 🔨 Publish project
-      run: dotnet publish -c Release -o publish
+      - name: 🔨 Publish project
+        run: dotnet publish -c Release -o publish
 
-    - name: 📤 Deploy to VPS via SSH
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        source: ./publish
-        target: /home/${{ secrets.SSH_USERNAME }}/discord-bot
+      - name: 📤 Deploy to VPS via SCP
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "publish/*"
+          target: "/home/${{ secrets.SSH_USERNAME }}/discord-bot"
 
-    - name: 🔄 Restart bot service
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        script: |
-          sudo systemctl daemon-reexec
-          sudo systemctl restart discordbot
+      - name: 🔄 Restart bot service on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            sudo systemctl daemon-reexec
+            sudo systemctl restart discordbot
