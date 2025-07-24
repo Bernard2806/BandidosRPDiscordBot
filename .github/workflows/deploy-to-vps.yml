@@ -1,33 +1,40 @@
-name: Deploy Bot Discord a VPS
+name: Deploy Bot to VPS
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v4
+    - name: 📥 Checkout repo
+      uses: actions/checkout@v3
 
-      - name: Instalar .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
 
-      - name: Publicar bot
-        run: dotnet publish -c Release -o publish
+    - name: 🔨 Publish project
+      run: dotnet publish -c Release -o publish
 
-      - name: Instalar sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
+    - name: 📤 Deploy to VPS via SSH
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        source: ./publish
+        target: /home/${{ secrets.SSH_USERNAME }}/discord-bot
 
-      - name: Copiar archivos a la VPS
-        run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r ./publish/* ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/${{ secrets.USERNAME }}/discord-bot/
-
-      - name: Reiniciar servicio del bot en la VPS
-        run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} "sudo systemctl restart discordbot"
+    - name: 🔄 Restart bot service
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          sudo systemctl daemon-reexec
+          sudo systemctl restart discordbot
