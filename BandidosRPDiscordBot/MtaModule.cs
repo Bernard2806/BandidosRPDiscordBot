@@ -91,7 +91,7 @@ namespace BandidosRPDiscordBot
                     .WithThumbnailUrl("https://i.imgur.com/Hf4hXNN.png")
                     .AddField("Cantidad", $"{cantidad} jugador{(cantidad != 1 ? "es" : "")}", true)
                     .AddField("Lista", listaJugadores, false)
-                    .WithFooter($"Completado en: {stopwatch.ElapsedMilliseconds}ms")
+                    .WithFooter($"Completado en: {stopwatch.ElapsedMilliseconds}ms | {TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Argentina Standard Time")).ToString("HH:mm:ss d/M/yyyy")} UTC-3 (Hora argentina)")
                     .Build();
 
                 await FollowupAsync(embed: embed);
